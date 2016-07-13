@@ -1,0 +1,860 @@
+1.NOR Flash Memory Map Layout for LS1043ARDB
+------------------------------------------
+Start      End Offset Description            Size
+0x60000000 0x600FFFFF bank0 rcw + pbi         1M
+0x60100000 0x601FFFFF bank0 U-Boot image      1M
+0x60200000 0x602FFFFF bank0 U-Boot Env        1M
+0x60300000 0x603FFFFF bank0 Fman ucode        1M
+0x60400000 0x63FFFFFF bank0 OpenWrt firmware 60M
+0x64000000 0x67FFFFFF bank4 Otherbank        64M
+
+2.Partitioning of the Flash
+-------------------------
+####################################################################################################
+# Layer0 #                              raw flash, 128M                                            #
+####################################################################################################
+#        # mtd0 # mtd1   # mtd2       # mtd3 #                 mtd9                    # mtd8      #
+# Layer1 # rcw  # u-boot # u-boot-env # fman #               firmware                  # otherbank #
+#        # 1M   # 1M     # 1M         # 1M   #                 60M                     # 64M       #
+####################################################################################################
+#        #      #        #            #      # mtd4 # mtd5   #       mtd6              #           #
+# Layer2 #      #        #            #      # dtb  # kernel #       rootfs            #           #
+#        #      #        #            #      # 1M   # 5M     #       54M               #           #
+####################################################################################################
+#        #      #        #            #      #      #        #           # mtd7        #           #
+# Layer3 #      #        #            #      #      #        # /dev/root # rootfs_data #           #
+#        #      #        #            #      #      #        # "/rom"    # "/overlay"  #           #
+#        #      #        #            #      #      #        # SquashFS  # JFFS2       #           #
+####################################################################################################
+
+3.Flashing firmware image and bootup kernel in u-boot
+-----------------------------------------------------
+setenv gatewayip <gatewayip>
+setenv ipaddr <board ip>
+setenv serverip <tftp server ip>
+setenv loadaddr 82000000 && setenv ramdiskaddr 88000000 && setenv fdtaddr 8f000000
+setenv wrtboot 'setenv bootargs root=/dev/mtdblock6 rootfstype=squashfs,jffs2 noinitrd earlycon=uart8250,mmio,0x21c0500 console=ttyS0,115200 mtdparts=60000000.nor:1M(rcw),1M(u-boot),1M(u-boot-env),1M(fman),1M(dtb),5M(kernel),54M(rootfs),64M(otherbank),60M@0x400000(firmware) && cp.b 60400000 $fdtaddr 100000 && cp.b 60500000 $loadaddr 500000 && bootm $loadaddr - $fdtaddr'
+save
+tftp a0000000 your_tftpserver_folder/openwrt-layerscape-64b-ls1043ardb-firmware && protect off all && erase 60400000 +3c00000 && cp.b a0000000 60400000 $filesize
+run wrtboot
+
+4.Boot log
+---------------------------------
+U-Boot 2015.01QorIQ-SDK-V1.7+gc297f5b (Dec 20 2015 - 13:08:26)
+
+Clock Configuration:
+       CPU0(A53):1600 MHz  CPU1(A53):1600 MHz  CPU2(A53):1600 MHz
+       CPU3(A53):1600 MHz
+       Bus:      400  MHz  DDR:      1600 MT/s  FMAN:     500  MHz
+Reset Configuration Word (RCW):
+       00000000: 08100010 0a000000 00000000 00000000
+       00000010: 14550002 80004012 e0025000 c1002000
+       00000020: 00000000 00000000 00000000 00038800
+       00000030: 00000000 00001101 00000096 00000001
+Board: LS1043ARDB, boot from vBank 0
+CPLD:  V1.4
+PCBA:  V3.0
+SERDES Reference Clocks:
+SD1_CLK1 = 156.25MHZ, SD1_CLK2 = 100.00MHZ
+I2C:   ready
+DRAM:  Initializing DDR....
+Detected UDIMM Fixed DDR on board
+2 GiB (DDR4, 32-bit, CL=11, ECC off)
+Firmware 'Microcode version 0.0.1 for LS1021a r1.0' for 1021 V1.0
+QE: uploading microcode 'Microcode for LS1021a r1.0' version 0.0.1
+Using SERDES1 Protocol: 5205 (0x1455)
+fman_port_enet_if:71: port(FM1_DTSEC3) is OK
+fman_port_enet_if:77: port(FM1_DTSEC4) is OK
+Flash: 128 MiB
+NAND:  512 MiB
+MMC:   FSL_SDHC: 0
+EEPROM: NXID v1
+PCIe1: disabled
+PCIe2: Root Complex no link, regs @ 0x3500000
+PCIe3: Root Complex x1 gen1, regs @ 0x3600000
+     01:00.0    - 8086:10d3 - Network controller
+PCIe3: Bus 00 - 01
+In:    serial
+Out:   serial
+Err:   serial
+Net:   Fman1: Uploading microcode version 106.4.17
+e1000: 68:05:ca:35:fa:4a
+       FM1@DTSEC1, FM1@DTSEC2, FM1@DTSEC3, FM1@DTSEC4, FM1@DTSEC5, FM1@DTSEC6, FM1@TGEC1, e1000#0 [PRIME]
+Warning: e1000#0 MAC addresses don't match:
+Address in SROM is         68:05:ca:35:fa:4a
+Address in environment is  00:e0:0c:00:73:07
+
+=>
+=> pri
+baudrate=115200
+bootargs=console=ttyS0,115200 root=/dev/ram0 earlycon=uart8250,0x21c0500,115200
+bootcmd=cpld reset altbank
+bootdelay=-1
+console=ttyAMA0,38400n8
+eth10addr=00:E0:0C:00:73:0a
+eth11addr=00:E0:0C:00:73:0b
+eth12addr=00:E0:0C:00:73:0c
+eth13addr=00:E0:0C:00:73:0d
+eth14addr=00:E0:0C:00:73:0e
+eth15addr=00:E0:0C:00:73:0f
+eth1addr=00:E0:0C:00:73:01
+eth2addr=00:E0:0C:00:73:02
+eth3addr=00:E0:0C:00:73:03
+eth4addr=00:E0:0C:00:73:04
+eth5addr=00:E0:0C:00:73:05
+eth6addr=00:E0:0C:00:73:06
+eth7addr=00:E0:0C:00:73:07
+eth8addr=00:E0:0C:00:73:08
+eth9addr=00:E0:0C:00:73:09
+ethact=e1000#0
+ethaddr=00:E0:0C:00:73:00
+ethprime=e1000#0
+faddr_fman_mc=0x64300000
+faddr_rcw=0x64000000
+faddr_uboot=0x64100000
+fdt_high=0xffffffffffffffff
+fman_ucode=60300000
+gatewayip=192.168.1.1
+hwconfig=fsl_ddr:bank_intlv=auto;dspi
+img_fman_mc=b28495/sdk/sdk-ls1043a/201512200957-b0dba1d/ls1043ardb/fsl_fman_ucode_t2080_r1.1_106_4_17.bin
+img_rcw=b28495/sdk/sdk-ls1043a/201512200957-b0dba1d/ls1043ardb/rcw/ls1043ardb/RR_FQPP_1455/rcw_1600.bin
+img_uboot=b28495/armv8-staging/ls1043a/u-boot-ls1043ardb.bin
+initrd_high=0xffffffffffffffff
+ipaddr=192.168.2.135
+kernel_addr=0x100000
+kernel_load=0xa0000000
+kernel_size=0x2800000
+kernel_start=0x61100000
+loadaddr=0x80100000
+netmask=255.255.255.0
+raddr_temp=0x90000000
+ramdisk_addr=0x800000
+ramdisk_size=0x2000000
+scsidevs=0
+serverip=192.168.2.1
+stderr=serial
+stdin=serial
+stdout=serial
+upbank4=tftp 82000000 b18965/ls1043-rdb/u-boot-dtb.bin && protect off all && erase 64100000 641fffff && cp.b 0x82000000 64100000 100000 && run bootcmd
+
+Environment size: 1653/131068 bytes
+=> cpld reset altbank
+
+U-Boot 2016.07-rc2-g15030c7 (Jul 13 2016 - 02:10:41 +0800), Build: jenkins-armv8-u-boot-build-ls1043-1s2085-247
+
+SoC:  unknown (0x87920410)
+Clock Configuration:
+       CPU0(A53):1600 MHz  CPU1(A53):1600 MHz  CPU2(A53):1600 MHz
+       CPU3(A53):1600 MHz
+       Bus:      400  MHz  DDR:      1600 MT/s  FMAN:     500  MHz
+Reset Configuration Word (RCW):
+       00000000: 08100010 0a000000 00000000 00000000
+       00000010: 14550002 80004012 e0025000 c1002000
+       00000020: 00000000 00000000 00000000 00038800
+       00000030: 00000000 00001101 00000096 00000001
+Model: LS1043A RDB Board
+Board: LS1043ARDB, boot from vBank 4
+CPLD:  V1.4
+PCBA:  V3.0
+SERDES Reference Clocks:
+SD1_CLK1 = 156.25MHZ, SD1_CLK2 = 100.00MHZ
+I2C:   ready
+DRAM:  Initializing DDR....
+Detected UDIMM Fixed DDR on board
+2 GiB (DDR4, 32-bit, CL=11, ECC off)
+Not a microcode
+Waking secondary cores to start from ffd08000
+All (4) cores are up.
+Using SERDES1 Protocol: 5205 (0x1455)
+Flash: 128 MiB
+NAND:  512 MiB
+MMC:   FSL_SDHC: 0
+EEPROM: NXID v1
+PCIe1: disabled
+PCIe2: Root Complex no link, regs @ 0x3500000
+PCIe3: Root Complex x1 gen1, regs @ 0x3600000
+PCI:
+     01:00.0    - 8086:10d3 - Network controller
+PCIe3: Bus 00 - 01
+In:    serial
+Out:   serial
+Err:   serial
+SEC0: RNG instantiated
+Net:   Fman1: Uploading microcode version 106.4.17
+e1000: 68:05:ca:35:fa:4a
+       FM1@DTSEC1, FM1@DTSEC2, FM1@DTSEC3, FM1@DTSEC4, FM1@DTSEC5, FM1@DTSEC6, FM1@TGEC1, e1000#0 [PRIME]
+Warning: e1000#0 MAC addresses don't match:
+Address in SROM is         68:05:ca:35:fa:4a
+Address in environment is  00:e0:0c:00:73:07
+
+=> pri
+baudrate=115200
+bootargs=console=ttyS0,115200 root=/dev/ram0 earlycon=uart8250,mmio,0x21c0500
+bootcmd=cp.b $kernel_start $kernel_load $kernel_size && bootm $kernel_load
+bootdelay=-1
+console=ttyAMA0,38400n8
+eth10addr=00:E0:0C:00:73:0a
+eth11addr=00:E0:0C:00:73:0b
+eth12addr=00:E0:0C:00:73:0c
+eth13addr=00:E0:0C:00:73:0d
+eth14addr=00:E0:0C:00:73:0e
+eth15addr=00:E0:0C:00:73:0f
+eth1addr=00:E0:0C:00:73:01
+eth2addr=00:E0:0C:00:73:02
+eth3addr=00:E0:0C:00:73:03
+eth4addr=00:E0:0C:00:73:04
+eth5addr=00:E0:0C:00:73:05
+eth6addr=00:E0:0C:00:73:06
+eth7addr=00:E0:0C:00:73:07
+eth8addr=00:E0:0C:00:73:08
+eth9addr=00:E0:0C:00:73:09
+ethact=e1000#0
+ethaddr=00:E0:0C:00:73:00
+ethprime=e1000#0
+fdt_high=0xffffffffffffffff
+fdtcontroladdr=ffbc5728
+fman_ucode=60300000
+hwconfig=fsl_ddr:bank_intlv=auto;dspi
+initrd_high=0xffffffffffffffff
+kernel_addr=0x100000
+kernel_load=0xa0000000
+kernel_size=0x2800000
+kernel_start=0x61100000
+loadaddr=0x80100000
+ramdisk_addr=0x800000
+ramdisk_size=0x2000000
+stderr=serial
+stdin=serial
+stdout=serial
+
+Environment size: 1089/131068 bytes
+=> setenv ipaddr 192.168.2.135
+=> setenv serverip 192.168.2.1
+=> setenv gatewayip 192.168.1.1
+=> setenv loadaddr 82000000 && setenv ramdiskaddr 88000000 && setenv fdtaddr 8f000000
+=> setenv wrtboot 'setenv bootargs root=/dev/mtdblock6 rootfstype=squashfs,jffs2 noinitrd earlycon=uart8250,mmio,0x21c0500 console=ttyS0,115200 mtdparts=60000000.nor:1M(rcw),1M(u-boot),1M(u-boot-env),1M(fman),1M(dtb),5M(kernel),54M(rootfs),64M(otherbank),60M@0x400000(firmware) && cp.b 60400000 $fdtaddr 100000 && cp.b 60500000 $loadaddr 500000 && bootm $loadaddr - $fdtaddr'
+=> save
+Saving Environment to Flash...
+Un-Protected 1 sectors
+Erasing Flash...
+. done
+Erased 1 sectors
+Writing to Flash... 9....8....7....6....5....4....3....2....1....done
+Protected 1 sectors
+=>
+=> tftp a0000000 jyt/openwrt/ls1043/openwrt-layerscape-64b-ls1043ardb-firmware && protect off all && erase 60400000 +3c00000 && cp.b a0000000 60400000 $filesize
+Using e1000#0 device
+TFTP from server 192.168.2.1; our IP address is 192.168.2.135
+Filename 'jyt/openwrt/ls1043/openwrt-layerscape-64b-ls1043ardb-firmware'.
+Load address: 0xa0000000
+Loading: #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #############################################################
+         10.9 MiB/s
+done
+Bytes transferred = 62914560 (3c00000 hex)
+Un-Protect Flash Bank # 1
+
+................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................ done
+Erased 480 sectors
+Copy to Flash... 9....8....7....6....5....4....3....2....1....done
+=>
+=> run wrtboot
+## Booting kernel from Legacy Image at 82000000 ...
+   Image Name:   ARM64 OpenWrt Linux-4.1.23
+   Image Type:   AArch64 Linux Kernel Image (gzip compressed)
+   Data Size:    3899658 Bytes = 3.7 MiB
+   Load Address: 80080000
+   Entry Point:  80080000
+   Verifying Checksum ... OK
+## Flattened Device Tree blob at 8f000000
+   Booting using the fdt blob at 0x8f000000
+   Uncompressing Kernel Image ... OK
+   Using Device Tree in place at 000000008f000000, end 000000008f0183bd
+WARNING: Missing crypto node
+
+Starting kernel ...
+
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.1.23 (jyt@BP) (gcc version 5.3.0 (OpenWrt GCC 5.3.0 r49395) ) #1 SMP Wed Jul 13 10:42:53 UTC 2016
+[    0.000000] CPU: AArch64 Processor [410fd034] revision 4
+[    0.000000] Detected VIPT I-cache on CPU0
+[    0.000000] alternatives: enabling workaround for ARM erratum 845719
+[    0.000000] earlycon: Early serial console at MMIO 0x21c0500 (options '')
+[    0.000000] bootconsole [uart0] enabled
+[    0.000000] efi: Getting EFI parameters from FDT:
+[    0.000000] efi: UEFI not found.
+[    0.000000] Reserved memory: initialized node bman-fbpr, compatible id fsl,bman-fbpr
+[    0.000000] Reserved memory: initialized node qman-fqd, compatible id fsl,qman-fqd
+[    0.000000] Reserved memory: initialized node qman-pfdr, compatible id fsl,qman-pfdr
+[    0.000000] PERCPU: Embedded 16 pages/cpu @ffff80007fd8d000 s27072 r8192 d30272 u65536
+[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 516615
+[    0.000000] Kernel command line: root=/dev/mtdblock6 rootfstype=squashfs,jffs2 noinitrd earlycon=uart8250,mmio,0x21c0500 console=ttyS0,115200 mtdparts=60000000.nor:1M(rcw),1M(u-boot),1M(u-boot-env),1M(fman),1M(dtb),5M(kernel),54M(rootfs),64M(otherbank),60M@0x400000(firmware)
+[    0.000000] log_buf_len individual max cpu contribution: 4096 bytes
+[    0.000000] log_buf_len total cpu_extra contributions: 12288 bytes
+[    0.000000] log_buf_len min size: 16384 bytes
+[    0.000000] log_buf_len: 32768 bytes
+[    0.000000] early log buf free: 14560(88%)
+[    0.000000] PID hash table entries: 4096 (order: 3, 32768 bytes)
+[    0.000000] Dentry cache hash table entries: 262144 (order: 9, 2097152 bytes)
+[    0.000000] Inode-cache hash table entries: 131072 (order: 8, 1048576 bytes)
+[    0.000000] software IO TLB [mem 0xf6a00000-0xfaa00000] (64MB) mapped at [ffff800076a00000-ffff80007a9fffff]
+[    0.000000] Memory: 1933896K/2095104K available (5768K kernel code, 340K rwdata, 2500K rodata, 276K init, 721K bss, 161208K reserved, 0K cma-reserved)
+[    0.000000] Virtual kernel memory layout:
+[    0.000000]     vmalloc : 0xffff000000000000 - 0xffff7c7fbfff0000   (127486 GB)
+[    0.000000]     vmemmap : 0xffff7c7fc0000000 - 0xffff7fffc0000000   (  3584 GB maximum)
+[    0.000000]               0xffff7c7fc0000000 - 0xffff7c7fc1bf9000   (    27 MB actual)
+[    0.000000]     fixed   : 0xffff7ffffabfd000 - 0xffff7ffffac00000   (    12 KB)
+[    0.000000]     PCI I/O : 0xffff7ffffae00000 - 0xffff7ffffbe00000   (    16 MB)
+[    0.000000]     modules : 0xffff7ffffc000000 - 0xffff800000000000   (    64 MB)
+[    0.000000]     memory  : 0xffff800000000000 - 0xffff80007fe00000   (  2046 MB)
+[    0.000000]       .init : 0xffff800000896000 - 0xffff8000008db000   (   276 KB)
+[    0.000000]       .text : 0xffff800000080000 - 0xffff8000008951a4   (  8277 KB)
+[    0.000000]       .data : 0xffff8000008e6000 - 0xffff80000093b000   (   340 KB)
+[    0.000000] Hierarchical RCU implementation.
+[    0.000000]  CONFIG_RCU_FANOUT set to non-default value of 32
+[    0.000000]  RCU restricting CPUs from NR_CPUS=64 to nr_cpu_ids=4.
+[    0.000000] RCU: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.000000] NR_IRQS:64 nr_irqs:64 0
+[    0.000000] Architected cp15 timer(s) running at 25.00MHz (phys).
+[    0.000000] clocksource arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x5c40939b5, max_idle_ns: 440795202646 ns
+[    0.000002] sched_clock: 56 bits at 25MHz, resolution 40ns, wraps every 4398046511100ns
+[    0.008237] Calibrating delay loop (skipped), value calculated using timer frequency.. 50.00 BogoMIPS (lpj=250000)
+[    0.018642] pid_max: default: 32768 minimum: 301
+[    0.023339] Mount-cache hash table entries: 4096 (order: 3, 32768 bytes)
+[    0.030074] Mountpoint-cache hash table entries: 4096 (order: 3, 32768 bytes)
+[    0.037599] EFI services will not be available.
+[    0.042623] CPU1: Booted secondary processor
+[    0.042627] Detected VIPT I-cache on CPU1
+[    0.042768] CPU2: Booted secondary processor
+[    0.042771] Detected VIPT I-cache on CPU2
+[    0.042902] CPU3: Booted secondary processor
+[    0.042904] Detected VIPT I-cache on CPU3
+[    0.042932] Brought up 4 CPUs
+[    0.070816] SMP: Total of 4 processors activated.
+[    0.075536] CPU: All CPU(s) started at EL2
+[    0.079655] alternatives: patching kernel code
+[    0.086792] DMI not present or invalid.
+[    0.090754] clocksource jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.100593] atomic64_test: passed
+[    0.104311] NET: Registered protocol family 16
+[    0.109363] fsl-mc bus type registered
+[    0.113169] MC object device driver fsl_mc_dprc registered
+[    0.118714] MC object device driver fsl_mc_allocator registered
+[    0.124694] Bman ver:0a02,02,01
+[    0.130025] qman-fqd addr 0xff800000 size 0x400000
+[    0.134833] qman-pfdr addr 0xfc000000 size 0x2000000
+[    0.139821] Qman ver:0a01,03,02,00
+[    0.143310] vdso: 2 pages (1 code @ ffff8000008ed000, 1 data @ ffff8000008ec000)
+[    0.150845] DMA: preallocated 256 KiB pool for atomic allocations
+[    0.157052] Serial: AMBA PL011 UART driver
+[    0.201606] ACPI: Interpreter disabled.
+[    0.205877] SCSI subsystem initialized
+[    0.210022] usbcore: registered new interface driver usbfs
+[    0.215577] usbcore: registered new interface driver hub
+[    0.220937] usbcore: registered new device driver usb
+[    0.226079] pps_core: LinuxPPS API ver. 1 registered
+[    0.231062] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.240273] PTP clock support registered
+[    0.244377] bman-fbpr addr 0xfe000000 size 0x1000000
+[    0.249389] Bman err interrupt handler present
+[    0.253972] unknown BMan version in portal node,default to rev1.0
+[    0.260113] unknown BMan version in portal node,default to rev1.0
+[    0.266250] unknown BMan version in portal node,default to rev1.0
+[    0.272381] unknown BMan version in portal node,default to rev1.0
+[    0.278516] unknown BMan version in portal node,default to rev1.0
+[    0.284647] unknown BMan version in portal node,default to rev1.0
+[    0.290782] unknown BMan version in portal node,default to rev1.0
+[    0.296912] unknown BMan version in portal node,default to rev1.0
+[    0.303047] unknown BMan version in portal node,default to rev1.0
+[    0.309253] Bman portal initialised, cpu 0
+[    0.313427] Bman portal initialised, cpu 1
+[    0.317595] Bman portal initialised, cpu 2
+[    0.321763] Bman portal initialised, cpu 3
+[    0.325877] Bman portals initialised
+[    0.330330] Qman err interrupt handler present
+[    0.334788] Can't find Qman clock frequency
+[    0.339153] QMan: Allocated lookup table at ffff00000016d000, entry count 65537
+[    0.346528] unknown QMan version in portal node,default to rev1.1
+[    0.352650] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@0' has 0x0101
+[    0.360957] unknown QMan version in portal node,default to rev1.1
+[    0.367080] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@10000' has 0x0101
+[    0.375736] unknown QMan version in portal node,default to rev1.1
+[    0.381856] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@20000' has 0x0101
+[    0.390512] unknown QMan version in portal node,default to rev1.1
+[    0.396633] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@30000' has 0x0101
+[    0.405288] unknown QMan version in portal node,default to rev1.1
+[    0.411409] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@40000' has 0x0101
+[    0.420064] unknown QMan version in portal node,default to rev1.1
+[    0.426185] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@50000' has 0x0101
+[    0.434840] unknown QMan version in portal node,default to rev1.1
+[    0.440961] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@60000' has 0x0101
+[    0.449616] unknown QMan version in portal node,default to rev1.1
+[    0.455737] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@70000' has 0x0101
+[    0.464392] unknown QMan version in portal node,default to rev1.1
+[    0.470513] Revision=0x0302, but portal '/qman-portals@500000000/qman-portal@80000' has 0x0101
+[    0.479838] Qman portal initialised, cpu 0
+[    0.484406] Qman portal initialised, cpu 1
+[    0.488967] Qman portal initialised, cpu 2
+[    0.493528] Qman portal initialised, cpu 3
+[    0.497641] Qman portals initialised
+[    0.501299] Bman: BPID allocator includes range 32:32
+[    0.506401] Qman: FQID allocator includes range 256:256
+[    0.511649] Qman: FQID allocator includes range 32768:32768
+[    0.517278] Qman: CGRID allocator includes range 0:256
+[    0.522546] Qman: pool channel allocator includes range 1025:15
+[    0.528532] No USDPAA memory, no 'usdpaa_mem' bootarg
+[    0.533638] fsl-ifc 1530000.ifc: Freescale Integrated Flash Controller
+[    0.540200] fsl-ifc 1530000.ifc: IFC version 1.4, 8 banks
+[    0.546185] Switched to clocksource arch_sys_counter
+[    0.551318] pnp: PnP ACPI: disabled
+[    0.555272] NET: Registered protocol family 2
+[    0.559947] TCP established hash table entries: 16384 (order: 5, 131072 bytes)
+[    0.567305] TCP bind hash table entries: 16384 (order: 6, 262144 bytes)
+[    0.574134] TCP: Hash tables configured (established 16384 bind 16384)
+[    0.580737] UDP hash table entries: 1024 (order: 3, 32768 bytes)
+[    0.586802] UDP-Lite hash table entries: 1024 (order: 3, 32768 bytes)
+[    0.593377] NET: Registered protocol family 1
+[    0.597875] RPC: Registered named UNIX socket transport module.
+[    0.603818] RPC: Registered udp transport module.
+[    0.608545] RPC: Registered tcp transport module.
+[    0.613265] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.620431] futex hash table entries: 1024 (order: 4, 65536 bytes)
+[    0.626825] HugeTLB registered 2 MB page size, pre-allocated 0 pages
+[    0.633410] VFS: Disk quotas dquot_6.6.0
+[    0.637375] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.644461] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    0.650483] NFS: Registering the id_resolver key type
+[    0.655568] Key type id_resolver registered
+[    0.659770] Key type id_legacy registered
+[    0.663822] jffs2: version 2.2 (NAND) (ZLIB) (RTIME) (c) 2001-2006 Red Hat, Inc.
+[    0.671368] fuse init (API version 7.23)
+[    0.675762] io scheduler noop registered (default)
+[    0.681443] PCI host bridge /soc/pcie@3500000 ranges:
+[    0.686528]    IO 0x4800010000..0x480001ffff -> 0x00000000
+[    0.692038]   MEM 0x4840000000..0x487fffffff -> 0x40000000
+[    0.697623] layerscape-pcie 3500000.pcie: PCI host bridge to bus 0000:00
+[    0.704357] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    0.709871] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    0.716079] pci_bus 0000:00: root bus resource [mem 0x4840000000-0x487fffffff] (bus address [0x40000000-0x7fffffff])
+[    0.726722] pci 0000:00:00.0: IOMMU is currently not supported for PCI
+[    0.733403] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+[    0.741527] pci 0000:00:00.0: BAR 1: assigned [mem 0x4840000000-0x4843ffffff]
+[    0.748702] pci 0000:00:00.0: BAR 0: assigned [mem 0x4844000000-0x4844ffffff]
+[    0.755872] pci 0000:00:00.0: BAR 6: assigned [mem 0x4845000000-0x4845ffffff pref]
+[    0.763481] pci 0000:00:00.0: PCI bridge to [bus 01]
+[    0.768488] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
+[    0.774773] PCI host bridge /soc/pcie@3600000 ranges:
+[    0.779854]    IO 0x5000010000..0x500001ffff -> 0x00000000
+[    0.785364]   MEM 0x5040000000..0x507fffffff -> 0x40000000
+[    0.790943] layerscape-pcie 3600000.pcie: PCI host bridge to bus 0001:00
+[    0.797679] pci_bus 0001:00: root bus resource [bus 00-ff]
+[    0.803188] pci_bus 0001:00: root bus resource [io  0x10000-0x1ffff] (bus address [0x0000-0xffff])
+[    0.812195] pci_bus 0001:00: root bus resource [mem 0x5040000000-0x507fffffff] (bus address [0x40000000-0x7fffffff])
+[    0.822821] pci 0001:00:00.0: IOMMU is currently not supported for PCI
+[    0.829935] pci 0001:01:00.0: IOMMU is currently not supported for PCI
+[    0.856229] pci 0001:00:00.0: BAR 1: assigned [mem 0x5040000000-0x5043ffffff]
+[    0.863399] pci 0001:00:00.0: BAR 0: assigned [mem 0x5044000000-0x5044ffffff]
+[    0.870574] pci 0001:00:00.0: BAR 6: assigned [mem 0x5045000000-0x5045ffffff pref]
+[    0.878184] pci 0001:00:00.0: BAR 8: assigned [mem 0x5046000000-0x50460fffff]
+[    0.885352] pci 0001:00:00.0: BAR 7: assigned [io  0x10000-0x10fff]
+[    0.891652] pci 0001:01:00.0: BAR 1: assigned [mem 0x5046000000-0x504607ffff]
+[    0.898835] pci 0001:01:00.0: BAR 6: assigned [mem 0x5046080000-0x50460bffff pref]
+[    0.906443] pci 0001:01:00.0: BAR 0: assigned [mem 0x50460c0000-0x50460dffff]
+[    0.913622] pci 0001:01:00.0: BAR 3: assigned [mem 0x50460e0000-0x50460e3fff]
+[    0.920805] pci 0001:01:00.0: BAR 2: assigned [io  0x10000-0x1001f]
+[    0.927113] pci 0001:00:00.0: PCI bridge to [bus 01]
+[    0.932098] pci 0001:00:00.0:   bridge window [io  0x10000-0x10fff]
+[    0.938395] pci 0001:00:00.0:   bridge window [mem 0x5046000000-0x50460fffff]
+[    0.945959] Serial: 8250/16550 driver, 2 ports, IRQ sharing disabled
+[    0.952850] console [ttyS0] disabled
+[    0.956457] 21c0500.serial: ttyS0 at MMIO 0x21c0500 (irq = 15, base_baud = 25000000) is a 16550A
+[    0.965295] console [ttyS0] enabled
+[    0.965295] console [ttyS0] enabled
+[    0.972271] bootconsole [uart0] disabled
+[    0.972271] bootconsole [uart0] disabled
+[    0.980258] 21c0600.serial: ttyS1 at MMIO 0x21c0600 (irq = 15, base_baud = 25000000) is a 16550A
+[    0.989130] of_serial: probe of 21d0500.serial failed with error -28
+[    0.995500] of_serial: probe of 21d0600.serial failed with error -28
+[    1.002046] Unable to detect cache hierarcy from DT for CPU 0
+[    1.010995] brd: module loaded
+[    1.016003] loop: module loaded
+[    1.021262] 60000000.nor: Found 1 x16 devices at 0x0 in 16-bit bank. Manufacturer ID 0x000089 Chip ID 0x00227e
+[    1.031262] Amd/Fujitsu Extended Query Table at 0x0040
+[    1.036401]   Amd/Fujitsu Extended Query version 1.3.
+[    1.041443] number of CFI chips: 1
+[    1.044845] 9 cmdlinepart partitions found on MTD device 60000000.nor
+[    1.051277] Creating 9 MTD partitions on "60000000.nor":
+[    1.056582] 0x000000000000-0x000000100000 : "rcw"
+[    1.061496] ftl_cs: FTL header not found.
+[    1.065695] 0x000000100000-0x000000200000 : "u-boot"
+[    1.070861] ftl_cs: FTL header not found.
+[    1.075034] 0x000000200000-0x000000300000 : "u-boot-env"
+[    1.080553] ftl_cs: FTL header not found.
+[    1.084729] 0x000000300000-0x000000400000 : "fman"
+[    1.089719] ftl_cs: FTL header not found.
+[    1.093895] 0x000000400000-0x000000500000 : "dtb"
+[    1.098800] ftl_cs: FTL header not found.
+[    1.102973] 0x000000500000-0x000000a00000 : "kernel"
+[    1.108137] ftl_cs: FTL header not found.
+[    1.112309] 0x000000a00000-0x000004000000 : "rootfs"
+[    1.117474] ftl_cs: FTL header not found.
+[    1.121650] mtd: device 6 (rootfs) set to be root filesystem
+[    1.127314] 1 squashfs-split partitions found on MTD device rootfs
+[    1.133483] 0x000000b00000-0x000004000000 : "rootfs_data"
+[    1.139080] ftl_cs: FTL header not found.
+[    1.143257] 0x000004000000-0x000008000000 : "otherbank"
+[    1.148680] ftl_cs: FTL header not found.
+[    1.152854] 0x000000400000-0x000004000000 : "firmware"
+[    1.158193] ftl_cs: FTL header not found.
+[    1.162814] nand: device found, Manufacturer ID: 0x2c, Chip ID: 0xac
+[    1.169161] nand: Micron MT29F4G08ABBDAH4
+[    1.173160] nand: 512 MiB, SLC, erase size: 128 KiB, page size: 2048, OOB size: 64
+[    1.180985] Bad block table found at page 262080, version 0x01
+[    1.187286] Bad block table found at page 262016, version 0x01
+[    1.195438] ftl_cs: FTL header not found.
+[    1.199625] fsl,ifc-nand 7e800000.nand: IFC NAND device at 0x7e800000, bank 1
+[    1.207436] libphy: Fixed MDIO Bus: probed
+[    1.211523] tun: Universal TUN/TAP device driver, 1.6
+[    1.216567] tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+[    1.222917] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.229378] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.235873] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.240891] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.245906] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.250927] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.255942] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.260961] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.265978] libphy: Freescale XGMAC MDIO Bus: probed
+[    1.282650] Freescale FM module, FMD API version 21.1.0
+[    1.289546] Freescale FM Ports module
+[    1.293200] fsl_mac: fsl_mac: FSL FMan MAC API based driver
+[    1.298867] fsl_mac 1ae0000.ethernet: FMan MEMAC
+[    1.303479] fsl_mac 1ae0000.ethernet: FMan MAC address: 00:e0:0c:00:73:00
+[    1.310309] fsl_mac 1ae2000.ethernet: FMan MEMAC
+[    1.314918] fsl_mac 1ae2000.ethernet: FMan MAC address: 00:e0:0c:00:73:01
+[    1.321744] fsl_mac 1ae4000.ethernet: FMan MEMAC
+[    1.326358] fsl_mac 1ae4000.ethernet: FMan MAC address: 00:e0:0c:00:73:02
+[    1.333182] fsl_mac 1ae6000.ethernet: FMan MEMAC
+[    1.337797] fsl_mac 1ae6000.ethernet: FMan MAC address: 00:e0:0c:00:73:03
+[    1.344623] fsl_mac 1ae8000.ethernet: FMan MEMAC
+[    1.349237] fsl_mac 1ae8000.ethernet: FMan MAC address: 00:e0:0c:00:73:04
+[    1.356064] fsl_mac 1aea000.ethernet: FMan MEMAC
+[    1.360677] fsl_mac 1aea000.ethernet: FMan MAC address: 00:e0:0c:00:73:05
+[    1.367507] fsl_mac 1af0000.ethernet: FMan MEMAC
+[    1.372117] fsl_mac 1af0000.ethernet: FMan MAC address: 00:e0:0c:00:73:06
+[    1.378965] fsl_dpa: FSL DPAA Ethernet driver
+[    1.387069] fsl_dpa: fsl_dpa: Probed interface eth0
+[    1.395740] fsl_dpa: fsl_dpa: Probed interface eth1
+[    1.404752] fsl_dpa: fsl_dpa: Probed interface eth2
+[    1.414121] fsl_dpa: fsl_dpa: Probed interface eth3
+[    1.423819] fsl_dpa: fsl_dpa: Probed interface eth4
+[    1.433876] fsl_dpa: fsl_dpa: Probed interface eth5
+[    1.444266] fsl_dpa: fsl_dpa: Probed interface eth6
+[    1.449230] fsl_advanced: FSL DPAA Advanced drivers:
+[    1.454185] fsl_proxy: FSL DPAA Proxy initialization driver
+[    1.459931] fsl_dpa_shared: FSL DPAA Shared Ethernet driver
+[    1.465573] fsl_dpa_macless: FSL DPAA MACless Ethernet driver
+[    1.471394] fsl_oh: FSL FMan Offline Parsing port driver
+[    1.476801] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
+[    1.482621] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
+[    1.488810] e1000e 0001:01:00.0: Interrupt Throttling Rate (ints/sec) set to dynamic conservative mode
+[    1.622241] e1000e 0001:01:00.0 eth7: registered PHC clock
+[    1.627724] e1000e 0001:01:00.0 eth7: (PCI Express:2.5GT/s:Width x1) 68:05:ca:35:fa:4a
+[    1.635630] e1000e 0001:01:00.0 eth7: Intel(R) PRO/1000 Network Connection
+[    1.642508] e1000e 0001:01:00.0 eth7: MAC: 3, PHY: 8, PBA No: E46981-008
+[    2.850000] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[    2.856526] ehci-pci: EHCI PCI platform driver
+[    2.860996] ehci-platform: EHCI generic platform driver
+[    2.866357] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[    2.872530] ohci-pci: OHCI PCI platform driver
+[    2.877005] ohci-platform: OHCI generic platform driver
+[    2.882534] xhci-hcd xhci-hcd.0.auto: xHCI Host Controller
+[    2.888023] xhci-hcd xhci-hcd.0.auto: new USB bus registered, assigned bus number 1
+[    2.895749] xhci-hcd xhci-hcd.0.auto: hcc params 0x0220f66d hci version 0x100 quirks 0x00010010
+[    2.904464] xhci-hcd xhci-hcd.0.auto: irq 23, io mem 0x02f00000
+[    2.910617] hub 1-0:1.0: USB hub found
+[    2.914367] hub 1-0:1.0: 1 port detected
+[    2.918365] xhci-hcd xhci-hcd.0.auto: xHCI Host Controller
+[    2.923843] xhci-hcd xhci-hcd.0.auto: new USB bus registered, assigned bus number 2
+[    2.931513] usb usb2: We don't know the algorithms for LPM for this host, disabling LPM.
+[    2.939796] hub 2-0:1.0: USB hub found
+[    2.943543] hub 2-0:1.0: 1 port detected
+[    2.947545] xhci-hcd xhci-hcd.1.auto: xHCI Host Controller
+[    2.953026] xhci-hcd xhci-hcd.1.auto: new USB bus registered, assigned bus number 3
+[    2.960744] xhci-hcd xhci-hcd.1.auto: hcc params 0x0220f66d hci version 0x100 quirks 0x00010010
+[    2.969451] xhci-hcd xhci-hcd.1.auto: irq 24, io mem 0x03000000
+[    2.975566] hub 3-0:1.0: USB hub found
+[    2.979320] hub 3-0:1.0: 1 port detected
+[    2.983307] xhci-hcd xhci-hcd.1.auto: xHCI Host Controller
+[    2.988790] xhci-hcd xhci-hcd.1.auto: new USB bus registered, assigned bus number 4
+[    2.996458] usb usb4: We don't know the algorithms for LPM for this host, disabling LPM.
+[    3.004729] hub 4-0:1.0: USB hub found
+[    3.008481] hub 4-0:1.0: 1 port detected
+[    3.012480] xhci-hcd xhci-hcd.2.auto: xHCI Host Controller
+[    3.017991] xhci-hcd xhci-hcd.2.auto: new USB bus registered, assigned bus number 5
+[    3.025707] xhci-hcd xhci-hcd.2.auto: hcc params 0x0220f66d hci version 0x100 quirks 0x00010010
+[    3.034412] xhci-hcd xhci-hcd.2.auto: irq 25, io mem 0x03100000
+[    3.040531] hub 5-0:1.0: USB hub found
+[    3.044279] hub 5-0:1.0: 1 port detected
+[    3.048281] xhci-hcd xhci-hcd.2.auto: xHCI Host Controller
+[    3.053760] xhci-hcd xhci-hcd.2.auto: new USB bus registered, assigned bus number 6
+[    3.061430] usb usb6: We don't know the algorithms for LPM for this host, disabling LPM.
+[    3.069708] hub 6-0:1.0: USB hub found
+[    3.073455] hub 6-0:1.0: 1 port detected
+[    3.077582] usbcore: registered new interface driver usb-storage
+[    3.083766] i2c /dev entries driver
+[    3.087623] sdhci: Secure Digital Host Controller Interface driver
+[    3.093791] sdhci: Copyright(c) Pierre Ossman
+[    3.098176] sdhci-pltfm: SDHCI platform and OF driver helper
+[    3.104921] sdhci-esdhc 1560000.esdhc: No vmmc regulator found
+[    3.110750] sdhci-esdhc 1560000.esdhc: No vqmmc regulator found
+[    3.156192] mmc0: SDHCI controller on 1560000.esdhc [1560000.esdhc] using ADMA 64-bit
+[    3.164615] Freescale USDPAA process driver
+[    3.168795] fsl-usdpaa: no region found
+[    3.172622] Freescale USDPAA process IRQ driver
+[    3.177347] NET: Registered protocol family 10
+[    3.182411] NET: Registered protocol family 17
+[    3.186868] bridge: automatic filtering via arp/ip/ip6tables has been deprecated. Update your scripts to load br_netfilter if you need this.
+[    3.199490] 8021q: 802.1Q VLAN Support v1.8
+[    3.203680] Key type dns_resolver registered
+[    3.208335] fsl_generic: FSL DPAA Generic Ethernet driver
+[    3.213827] hctosys: unable to open rtc device (rtc0)
+[    3.216453] mmc0: new SDHC card at address c1e7
+[    3.216565] mmcblk0: mmc0:c1e7 SD04G 3.69 GiB
+[    3.222248]  mmcblk0: p1
+[    3.230787] fdt: not creating '/sys/firmware/fdt': CRC check failed
+[    3.238957] VFS: Mounted root (squashfs filesystem) readonly on device 31:6.
+[    3.246102] Freeing unused kernel memory: 276K (ffff800000896000 - ffff8000008db000)
+[    3.246198] usb 1-1: new high-speed USB device number 2 using xhci-hcd
+[    3.260367] Freeing alternatives memory: 32K (ffff8000008db000 - ffff8000008e3000)
+[    3.336224] usb 4-1: new SuperSpeed USB device number 2 using xhci-hcd
+[    3.366274] usb usb5-port1: over-current condition
+[    3.396207] usb usb6-port1: over-current condition
+[    3.472057] init: Console is alive
+[    3.475789] usb-storage 4-1:1.0: USB Mass Storage device detected
+[    3.482115] scsi host0: usb-storage 4-1:1.0
+[    3.489002] usb 1-1: ep 0x81 - rounding interval to 128 microframes, ep desc says 255 microframes
+[    3.497883] usb 1-1: ep 0x2 - rounding interval to 128 microframes, ep desc says 255 microframes
+[    3.506239] init: - preinit -
+[    3.509783] usb-storage 1-1:1.0: USB Mass Storage device detected
+[    3.516309] scsi host1: usb-storage 1-1:1.0
+[    3.520651] random: procd urandom read with 3 bits of entropy available
+Press the [f] key and hit [enter] to enter failsafe mode
+Press the [1], [2], [3] or [4] key and hit [enter] to select the debug level
+[    4.516452] scsi 1:0:0:0: Direct-Access     Kingston DT 101 G2        1.00 PQ: 0 ANSI: 2
+[    4.525022] sd 1:0:0:0: [sda] 3913664 512-byte logical blocks: (2.00 GB/1.87 GiB)
+[    4.532654] sd 1:0:0:0: [sda] Write Protect is off
+[    4.537584] sd 1:0:0:0: [sda] No Caching mode page found
+[    4.542886] sd 1:0:0:0: [sda] Assuming drive cache: write through
+[    4.550171] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0 PMAP PQ: 0 ANSI: 6
+[    4.550327]  sda: sda1
+[    4.558933] sd 1:0:0:0: [sda] Attached SCSI removable disk
+[    5.540189] mount_root: jffs2 not ready yet, using temporary tmpfs overlay
+[    5.549108] procd: - early -
+[    5.690793] sd 0:0:0:0: [sdb] 30728832 512-byte logical blocks: (15.7 GB/14.7 GiB)
+[    5.698536] sd 0:0:0:0: [sdb] Write Protect is off
+[    5.703407] sd 0:0:0:0: [sdb] No Caching mode page found
+[    5.708715] sd 0:0:0:0: [sdb] Assuming drive cache: write through
+[    5.739138]  sdb: sdb1
+[    5.742231] sd 0:0:0:0: [sdb] Attached SCSI removable disk
+[    6.242632] procd: - ubus -
+[    6.295216] procd: - init -
+Please press Enter to activate this console.
+[    7.614535] jffs2_scan_eraseblock(): End of filesystem marker found at 0x0
+[    7.621575] jffs2_build_filesystem(): unlocking the mtd device... done.
+[    7.628199] jffs2_build_filesystem(): erasing all blocks after the end marker...
+[    7.700603] device eth0 entered promiscuous mode
+[    7.706092] br-lan: port 1(eth0) entered forwarding state
+[    7.711515] br-lan: port 1(eth0) entered forwarding state
+[    9.697128] br-lan: port 1(eth0) entered disabled state
+
+
+
+BusyBox v1.24.2 () built-in shell (ash)
+
+  _______                     ________        __
+ |       |.-----.-----.-----.|  |  |  |.----.|  |_
+ |   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
+ |_______||   __|_____|__|__||________||__|  |____|
+          |__| W I R E L E S S   F R E E D O M
+ -----------------------------------------------------
+ DESIGNATED DRIVER (Bleeding Edge, r49395)
+ -----------------------------------------------------
+  * 2 oz. Orange Juice         Combine all juices in a
+  * 2 oz. Pineapple Juice      tall glass filled with
+  * 2 oz. Grapefruit Juice     ice, stir well.
+  * 2 oz. Cranberry Juice
+ -----------------------------------------------------
+root@OpenWrt:/#
+root@OpenWrt:/# ifconfig
+br-lan    Link encap:Ethernet  HWaddr 00:E0:0C:00:73:00
+          inet addr:192.168.1.1  Bcast:192.168.1.255  Mask:255.255.255.0
+          inet6 addr: fd78:b98d:d12a::1/60 Scope:Global
+          inet6 addr: fe80::2e0:cff:fe00:7300/64 Scope:Link
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:0 (0.0 B)  TX bytes:896 (896.0 B)
+
+eth0      Link encap:Ethernet  HWaddr 00:E0:0C:00:73:00
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:792 (792.0 B)
+          Memory:1ae0000-1ae0fff
+
+eth1      Link encap:Ethernet  HWaddr 00:E0:0C:00:73:01
+          inet6 addr: fe80::2e0:cff:fe00:7301/64 Scope:Link
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:1160 (1.1 KiB)
+          Memory:1ae2000-1ae2fff
+
+lo        Link encap:Local Loopback
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+root@OpenWrt:/# cat /proc/mtd
+dev:    size   erasesize  name
+mtd0: 00100000 00020000 "rcw"
+mtd1: 00100000 00020000 "u-boot"
+mtd2: 00100000 00020000 "u-boot-env"
+mtd3: 00100000 00020000 "fman"
+mtd4: 00100000 00020000 "dtb"
+mtd5: 00500000 00020000 "kernel"
+mtd6: 03600000 00020000 "rootfs"
+mtd7: 03500000 00020000 "rootfs_data"
+mtd8: 04000000 00020000 "otherbank"
+mtd9: 03c00000 00020000 "firmware"
+mtd10: 20000000 00020000 "7e800000.flash"
+root@OpenWrt:/#
+root@OpenWrt:/# mount
+/dev/root on /rom type squashfs (ro,relatime)
+proc on /proc type proc (rw,nosuid,nodev,noexec,noatime)
+sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,noatime)
+tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
+tmpfs on /tmp/root type tmpfs (rw,noatime,mode=755)
+overlayfs:/tmp/root on / type overlay (rw,noatime,lowerdir=/,upperdir=/tmp/root/upper,workdir=/tmp/root/work)
+tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
+devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,mode=600)
+debugfs on /sys/kernel/debug type debugfs (rw,noatime)
+root@OpenWrt:/#
+root@OpenWrt:/# cat /etc/config/network
+
+config interface 'loopback'
+        option ifname 'lo'
+        option proto 'static'
+        option ipaddr '127.0.0.1'
+        option netmask '255.0.0.0'
+
+config globals 'globals'
+        option ula_prefix 'fd78:b98d:d12a::/48'
+
+config interface 'lan'
+        option type 'bridge'
+        option ifname 'eth0'
+        option proto 'static'
+        option ipaddr '192.168.1.1'
+        option netmask '255.255.255.0'
+        option ip6assign '60'
+
+config interface 'wan'
+        option ifname 'eth1'
+        option proto 'dhcp'
+
+config interface 'wan6'
+        option ifname 'eth1'
+        option proto 'dhcpv6'
+
+root@OpenWrt:/#
+root@OpenWrt:/# ls -l
+drwxr-xr-x    2 root     root           739 Jun 30 05:39 bin
+drwxr-xr-x    5 root     root          2300 Jun 30 05:39 dev
+drwxr-xr-x    1 root     root           120 Jun 30 05:39 etc
+drwxrwxr-x    9 root     root           372 Jun 30 05:39 lib
+lrwxrwxrwx    1 root     root             3 Jun 30 05:39 lib64 -> lib
+drwxr-xr-x    2 root     root             3 Jun 30 05:39 mnt
+drwxr-xr-x    2 root     root             3 Jun 30 05:39 overlay
+dr-xr-xr-x   72 root     root             0 Jan  1  1970 proc
+drwxr-xr-x   16 root     root           212 Jun 30 05:39 rom
+drwxr-xr-x    2 root     root             3 Jun 30 05:39 root
+drwxr-xr-x    2 root     root           653 Jun 30 05:39 sbin
+dr-xr-xr-x   11 root     root             0 Jan  1  1970 sys
+drwxrwxrwt   12 root     root           340 Jun 30 05:39 tmp
+drwxr-xr-x    7 root     root            90 Jun 30 05:39 usr
+lrwxrwxrwx    1 root     root             4 Jun 30 05:39 var -> /tmp
+drwxr-xr-x    2 root     root             3 Jun 30 05:39 www
+root@OpenWrt:/#
