@@ -35,3 +35,19 @@ define KernelPackage/sdhci-of-esdhc/description
 endef
 
 $(eval $(call KernelPackage,sdhci-of-esdhc))
+
+
+define KernelPackage/ppfe
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Freescale PPFE Driver support
+  DEPENDS:=+kmod-i2c-core +kmod-i2c-imx
+  KCONFIG:=CONFIG_FSL_PPFE
+  FILES:=$(LINUX_DIR)/drivers/staging/fsl_ppfe/pfe.ko
+  AUTOLOAD:=$(call AutoLoad,35,ppfe)
+endef
+
+define KernelPackage/ppfe/description
+ Kernel modules for Freescale PPFE Driver support.
+endef
+
+$(eval $(call KernelPackage,ppfe))
