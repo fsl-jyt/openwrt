@@ -19,6 +19,11 @@ define Build/mk_firmware
 	dd if=$(KDIR)/root.squashfs of=$(KDIR)/root.squashfs.par conv=notrunc
 
 	cat $(KDIR)/$(IMAGE_PREFIX).dtb.par $(KDIR)/$(KERNEL_IMAGE).par $(KDIR)/root.squashfs.par > $@
+
+	if [ "ls1012ardb-64bit" = "$(PROFILE)" ]; then \
+		$(STAGING_DIR_HOST)/bin/make_ext4fs -l $(word 4,$(1)) -b 4096 -i 6000 -m 0 -J $(KDIR)/ls1012ardb.root.ext4 $(TARGET_DIR) ; \
+		cat $(KDIR)/$(IMAGE_PREFIX).dtb.par $(KDIR)/$(KERNEL_IMAGE).par $(KDIR)/ls1012ardb.root.ext4 > $(BIN_DIR)/ls1012ardb-ext4-firmware.bin ; \
+	fi
 endef
 
 # FIRMWARE_SIZE(60M)=DTB_PARTITION_SIZE(1M)+KERNEL_PARTITION_SIZE(5M)+SQUASHFS_PARTITION_SIZE(54M)
