@@ -1,0 +1,27 @@
+From 9e628a4c5694f1166451fca753d8355fc42599bf Mon Sep 17 00:00:00 2001
+From: Yutang Jiang <yutang.jiang@nxp.com>
+Date: Mon, 10 Oct 2016 23:11:49 +0800
+Subject: [PATCH 107/115] Revert "usb: kconfig: remove dependency FSL_SOC for
+ ehci fsl driver"
+
+This reverts commit e82d5f3ee26c399cd78086a883a4c1b7c4390d8c.
+---
+ drivers/usb/host/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+index 903397e..3bb0887 100644
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -145,7 +145,7 @@ config XPS_USB_HCD_XILINX
+ 
+ config USB_EHCI_FSL
+ 	tristate "Support for Freescale PPC on-chip EHCI USB controller"
+-	depends on USB_EHCI_HCD
++	depends on FSL_SOC
+ 	select USB_EHCI_ROOT_HUB_TT
+ 	select USB_FSL_MPH_DR_OF if OF
+ 	---help---
+-- 
+1.7.9.5
+

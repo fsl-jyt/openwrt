@@ -1,0 +1,36 @@
+From 04b63e1feb58e39c6feba4581197a8fe6fecdca6 Mon Sep 17 00:00:00 2001
+From: Ying Zhang <ying.zhang22455@nxp.com>
+Date: Thu, 29 Sep 2016 11:42:40 +0800
+Subject: [PATCH 113/115] armv8: aarch32: defconfig: Enable USB and related
+ configuration options
+
+This patch is to enable USB and related configuration options for
+AArch32 on ARMv8.
+
+Signed-off-by: Alison Wang <alison.wang@nxp.com>
+---
+ arch/arm/configs/ls_aarch32_defconfig |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/configs/ls_aarch32_defconfig b/arch/arm/configs/ls_aarch32_defconfig
+index 3a5b73e..5ee899f 100644
+--- a/arch/arm/configs/ls_aarch32_defconfig
++++ b/arch/arm/configs/ls_aarch32_defconfig
+@@ -154,8 +154,14 @@ CONFIG_MFD_SYSCON=y
+ CONFIG_FB=y
+ CONFIG_USB=y
+ CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_EHCI_HCD_PLATFORM=y
++CONFIG_USB_OHCI_HCD=y
++CONFIG_USB_OHCI_HCD_PLATFORM=y
++CONFIG_USB_STORAGE=y
+ CONFIG_USB_DWC3=y
+ CONFIG_USB_STORAGE=y
++CONFIG_USB_ULPI=y
+ CONFIG_MMC=y
+ CONFIG_MMC_SDHCI=y
+ CONFIG_MMC_SDHCI_PLTFM=y
+-- 
+1.7.9.5
+
