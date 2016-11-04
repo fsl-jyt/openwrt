@@ -62,6 +62,20 @@ endif
 endef
 TARGET_DEVICES += ls1043ardb
 
+define Device/ls1046ardb
+  DEVICE_TITLE := ls1046ardb-$(SUBTARGET)
+  DEVICE_PACKAGES += rcw-layerscape-ls1046ardb uboot-layerscape-$(SUBTARGET)-ls1046ardb fman-layerscape-ls1046ardb
+ifeq ($(SUBTARGET),64b)
+  DEVICE_DTS = freescale/fsl-ls1046a-rdb
+endif
+ifeq ($(SUBTARGET),32b)
+  DEVICE_DTS = ../../../arm64/boot/dts/freescale/fsl-ls1046a-rdb
+endif
+  IMAGE/firmware.bin = append-ls-dtb $$(DEVICE_DTS) | pad-to 1M | append-kernel | pad-to 6M | \
+  					append-ls-rootfs-ext4 $(1) 22M | check-size 33554433
+endef
+TARGET_DEVICES += ls1046ardb
+
 define Device/ls1012ardb
   DEVICE_TITLE := ls1012ardb-$(SUBTARGET)
   DEVICE_PACKAGES += rcw-layerscape-ls1012ardb uboot-layerscape-$(SUBTARGET)-ls1012ardb kmod-ppfe ppfe-ls1012ardb
