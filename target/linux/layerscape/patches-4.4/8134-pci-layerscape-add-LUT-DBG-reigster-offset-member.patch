@@ -11,6 +11,7 @@ so add a member to avoid macro redifinition.
 
 Signed-off-by: Mingkai Hu <mingkai.hu@nxp.com>
 Integrated-by: Zhao Qiang <qiang.zhao@nxp.com>
+Integrated-by: Yutang Jiang <yutang.jiang@nxp.com>
 ---
  drivers/pci/host/pci-layerscape.c |    8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)
@@ -34,7 +35,14 @@ Integrated-by: Zhao Qiang <qiang.zhao@nxp.com>
  		 pcie->drvdata->ltssm_shift) &
  		 LTSSM_STATE_MASK;
  
-@@ -202,18 +203,21 @@ static struct ls_pcie_drvdata ls1012_drv
+@@ -196,24 +197,28 @@ static struct ls_pcie_drvdata ls1021_drvdata = {
+ static struct ls_pcie_drvdata ls1012_drvdata = {
+ 	.lut_offset = 0xC0000,
+ 	.ltssm_shift = 24,
++	.lut_dbg = 0x7fc,
+ 	.ops = &ls_pcie_host_ops,
+ };
+ 
  static struct ls_pcie_drvdata ls1043_drvdata = {
  	.lut_offset = 0x10000,
  	.ltssm_shift = 24,
