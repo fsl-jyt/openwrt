@@ -30,6 +30,10 @@ define Build/append-ls-rootfs-ext4
 	dd if=$(KDIR)/$(word 1,$(1))-$(word 2,$(1)).root.ext4 >> $@
 endef
 
+define Build/append-ls-binary
+	dd if=$(KDIR)/$(1) >> $@
+endef
+
 define Device/Default
   PROFILES = Default
   FILESYSTEMS := squashfs
@@ -91,5 +95,23 @@ endif
   					append-ls-rootfs-ext4 $(1) 23M | check-size 33554433
 endef
 TARGET_DEVICES += ls1012ardb
+
+define Device/ls1088ardb
+  DEVICE_TITLE := ls1088ardb-$(SUBTARGET)
+  DEVICE_PACKAGES += rcw-layerscape-ls1088ardb uboot-layerscape-$(SUBTARGET)-ls1088ardb mc-binary-ls1088ardb
+ifeq ($(SUBTARGET),64b)
+  DEVICE_DTS = freescale/fsl-ls1088a-rdb
+endif
+ifeq ($(SUBTARGET),32b)
+  DEVICE_DTS = ../../../arm64/boot/dts/freescale/fsl-ls1088a-rdb
+endif
+  IMAGE/firmware.bin = append-ls-rcw $(1) | pad-to 1M | append-ls-uboot $(1) | pad-to 3M | \
+  					append-ls-binary ls1088ardb.mc | pad-to 7M | \
+					append-ls-binary ls1088ardb.dpl | pad-to 8M | \
+					append-ls-binary ls1088ardb.dpc | pad-to 9M | \
+  					append-ls-dtb $$(DEVICE_DTS) | pad-to 10M | append-kernel | pad-to 15M | \
+  					append-ls-rootfs-ext4 $(1) 17M | check-size 33554433
+endef
+TARGET_DEVICES += ls1088ardb
 
 $(eval $(call BuildImage))
