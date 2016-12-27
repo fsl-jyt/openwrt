@@ -114,4 +114,22 @@ endif
 endef
 TARGET_DEVICES += ls1088ardb
 
+define Device/ls2088ardb
+  DEVICE_TITLE := ls2088ardb-$(SUBTARGET)
+  DEVICE_PACKAGES += rcw-layerscape-ls2088ardb uboot-layerscape-$(SUBTARGET)-ls2088ardb mc-binary-ls2088ardb
+ifeq ($(SUBTARGET),64b)
+  DEVICE_DTS = freescale/fsl-ls2088a-rdb
+endif
+ifeq ($(SUBTARGET),32b)
+  DEVICE_DTS = ../../../arm64/boot/dts/freescale/fsl-ls2088a-rdb
+endif
+  IMAGE/firmware.bin = append-ls-rcw $(1) | pad-to 1M | append-ls-uboot $(1) | pad-to 3M | \
+  					append-ls-binary ls2088ardb.mc | pad-to 7M | \
+					append-ls-binary ls2088ardb.dpl | pad-to 8M | \
+					append-ls-binary ls2088ardb.dpc | pad-to 9M | \
+  					append-ls-dtb $$(DEVICE_DTS) | pad-to 10M | append-kernel | pad-to 15M | \
+					append-rootfs | pad-rootfs | check-size 33554433
+endef
+TARGET_DEVICES += ls2088ardb
+
 $(eval $(call BuildImage))

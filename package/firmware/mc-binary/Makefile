@@ -16,7 +16,7 @@ PKG_SOURCE_PROTO:=git
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/fsl-jyt/mc-binary.git
-PKG_SOURCE_VERSION:=7e2107941c7c6209798f65602e2b757facf10315
+PKG_SOURCE_VERSION:=345fc2f9270876b1db1a769c10cdccbe7f0a183c
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_LICENSE:=GPL-2.0 GPL-2.0+
@@ -34,8 +34,14 @@ define mc-binary/ls1088ardb
 	CONFIG:=ls1088ardb/ls1088ardb.mc ls1088ardb/ls1088ardb.dpc ls1088ardb/ls1088ardb.dpl
 endef
 
+define mc-binary/ls2088ardb
+	TITLE:=DPAA2 firmware $(PKG_NAME)-$(PKG_VERSION) for NXP ls2088ardb Dev Board
+	CONFIG:=ls2088ardb/ls2088ardb.mc ls2088ardb/ls2088ardb.dpc ls2088ardb/ls2088ardb.dpl
+endef
+
 MCBINARYS := \
-	ls1088ardb
+	ls1088ardb \
+	ls2088ardb
 
 define Package/mc-binary/template
 define Package/mc-binary-$(1)

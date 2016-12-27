@@ -15,6 +15,8 @@ DEFAULT_PACKAGES+= \
 	rcw-layerscape-ls1012ardb uboot-layerscape-$(SUBTARGET)-ls1012ardb \
 	kmod-ppfe ppfe-ls1012ardb \
 	rcw-layerscape-ls1088ardb uboot-layerscape-$(SUBTARGET)-ls1088ardb \
-	mc-binary-ls1088ardb
+	mc-binary-ls1088ardb \
+	rcw-layerscape-ls2088ardb uboot-layerscape-$(SUBTARGET)-ls2088ardb \
+	mc-binary-ls2088ardb
 
 $(eval $(call Profile,Default))

@@ -16,7 +16,7 @@ PKG_SOURCE_PROTO:=git
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/fsl-jyt/rcw.git
-PKG_SOURCE_VERSION:=06fe4738eb4c36663c5a73e3feb74723562c475a
+PKG_SOURCE_VERSION:=f2c0feb333dfd99f124ed2e4db0bbcbeeccbb3ff
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -50,11 +50,17 @@ define rcw/ls1088ardb
 	CONFIG=ls1088ardb-rcw.bin
 endef
 
+define rcw/ls2088ardb
+	TITLE=RCW binary $(PKG_NAME)-$(PKG_VERSION) for NXP ls2088ardb 64b/32b Dev Board
+	CONFIG=ls2088ardb-rcw.bin
+endef
+
 RCWS := \
 	ls1043ardb \
 	ls1046ardb \
 	ls1012ardb \
-	ls1088ardb
+	ls1088ardb \
+	ls2088ardb
 
 define Package/rcw/template
 define Package/rcw-layerscape-$(1)
