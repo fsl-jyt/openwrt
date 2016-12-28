@@ -35,7 +35,6 @@ define Build/append-ls-binary
 endef
 
 define Device/Default
-  PROFILES = Default
   FILESYSTEMS := squashfs
   KERNEL := kernel-bin | gzip | uImage gzip
   DEVICE_DTS :=
@@ -64,7 +63,6 @@ endif
   					append-ls-fman $(1) | pad-to 4M | append-ls-dtb $$(DEVICE_DTS) | pad-to 5M | \
   					append-kernel | pad-to 10M | append-rootfs | pad-rootfs | check-size 67108865
 endef
-TARGET_DEVICES += ls1043ardb
 
 define Device/ls1046ardb
   DEVICE_TITLE := ls1046ardb-$(SUBTARGET)
@@ -79,7 +77,6 @@ endif
   					append-ls-fman $(1) | pad-to 4M | append-ls-dtb $$(DEVICE_DTS) | pad-to 5M | \
   					append-kernel | pad-to 10M | append-ls-rootfs-ext4 $(1) 22M | check-size 33554433
 endef
-TARGET_DEVICES += ls1046ardb
 
 define Device/ls1012ardb
   DEVICE_TITLE := ls1012ardb-$(SUBTARGET)
@@ -94,7 +91,6 @@ endif
   					append-ls-dtb $$(DEVICE_DTS) | pad-to 4M | append-kernel | pad-to 9M | \
   					append-ls-rootfs-ext4 $(1) 23M | check-size 33554433
 endef
-TARGET_DEVICES += ls1012ardb
 
 define Device/ls1088ardb
   DEVICE_TITLE := ls1088ardb-$(SUBTARGET)
@@ -112,7 +108,6 @@ endif
   					append-ls-dtb $$(DEVICE_DTS) | pad-to 10M | append-kernel | pad-to 15M | \
   					append-ls-rootfs-ext4 $(1) 17M | check-size 33554433
 endef
-TARGET_DEVICES += ls1088ardb
 
 define Device/ls2088ardb
   DEVICE_TITLE := ls2088ardb-$(SUBTARGET)
@@ -130,6 +125,7 @@ endif
   					append-ls-dtb $$(DEVICE_DTS) | pad-to 10M | append-kernel | pad-to 15M | \
 					append-rootfs | pad-rootfs | check-size 33554433
 endef
-TARGET_DEVICES += ls2088ardb
+
+TARGET_DEVICES += $(PROFILE)
 
 $(eval $(call BuildImage))
